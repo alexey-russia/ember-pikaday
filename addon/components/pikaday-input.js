@@ -32,6 +32,13 @@ export default Ember.Component.extend({
     }
   }),
 
+  keyPress: function (e) {
+    // hide on enter
+    if (e.which === 13) {
+        this.get('pikaday').hide();
+    }
+  },
+
 
   firstRender: true,
 
