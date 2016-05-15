@@ -3,12 +3,35 @@
 import Ember from 'ember';
 import moment from 'moment';
 
-const { isPresent } = Ember;
+const { isPresent, computed } = Ember;
 
 export default Ember.Component.extend({
   tagName: 'input',
   attributeBindings: ['readonly', 'disabled', 'placeholder', 'type', 'name', 'size', 'required'],
   type: 'text',
+  valueFormat: 'date',
+
+  internalValue: computed('value', {
+    get() {
+      let value = this.get('value');
+      let valueFormat = this.get('valueFormat');
+      if (Object.prototype.toString.call(value) === '[object Date]') {
+        return value;
+      } else {
+        return moment(value, valueFormat).toDate();
+      }
+    },
+    set(key, value) {
+      let valueFormat = this.get('valueFormat');
+      if (valueFormat === 'date') {
+       this.set('value', value);
+      } else {
+       this.set('value', moment(value).format(valueFormat));
+      }
+      return value;
+    }
+  }),
+
 
   firstRender: true,
 
@@ -46,7 +69,7 @@ export default Ember.Component.extend({
       this.set('pikaday', pikaday);
       this.setPikadayDate();
 
-      this.addObserver('value', function() {
+      this.addObserver('internalValue', function() {
         that.setPikadayDate();
       });
 
@@ -66,7 +89,7 @@ export default Ember.Component.extend({
   }),
 
   setPikadayDate: function() {
-    this.get('pikaday').setDate(this.get('value'), true);
+    this.get('pikaday').setDate(this.get('internalValue'), true);
   },
 
   setMinDate: function() {
@@ -81,7 +104,7 @@ export default Ember.Component.extend({
 
   onPikadayClose: function() {
     if (this.get('pikaday').getDate() === null || Ember.isEmpty(this.$().val())) {
-      this.set('value', null);
+      this.set('internalValue', null);
     }
   },
 
@@ -98,7 +121,7 @@ export default Ember.Component.extend({
       selectedDate = moment.utc([selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate()]).toDate();
     }
 
-    this.set('value', selectedDate);
+    this.set('internalValue', selectedDate);
   },
 
   determineYearRange: function() {
